@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shayari Recommendation App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+        .shayari {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Shayari Recommendation App</h1>
+        <form id="shayari-form" class="text-center">
+            <div class="form-group">
+                <label for="category">Choose a Category:</label>
+                <select id="category" class="form-control" style="width: 200px; margin: 0 auto;">
+                    <option value="romantic">Romantic</option>
+                    <option value="sad">Sad</option>
+                    <option value="inspirational">Inspirational</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Get Shayari</button>
+        </form>
+        <div id="shayari-results" class="shayari text-center"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#shayari-form').on('submit', function(e) {
+                e.preventDefault();
+                var category = $('#category').val();
+                $.ajax({
+                    url: '/get_shayari',
+                    method: 'POST',
+                    data: { category: category },
+                    success: function(response) {
+                        var shayariHtml = '';
+                        if (response.length > 0) {
+                            response.forEach(function(shayari) {
+                                shayariHtml += '<p><strong>' + shayari.writer + ':</strong> ' + shayari.text + '</p>';
+                            });
+                        } else {
+                            shayariHtml = '<p>No shayari found for this category.</p>';
+                        }
+                        $('#shayari-results').html(shayariHtml);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
