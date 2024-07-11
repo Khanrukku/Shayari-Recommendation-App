@@ -14,3 +14,6 @@ This project is a web application that recommends shayari based on the selected 
 1. Install Flask:
    ```bash
    pip install flask
+
+
+
