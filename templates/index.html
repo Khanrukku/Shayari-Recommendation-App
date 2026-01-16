@@ -1,1 +1,305 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shayari Recommendation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #653a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
+        }
+        
+        .results {
+            margin-top: 30px;
+        }
+        
+        .emotion-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .shayari-card {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        
+        .shayari-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .shayari-text {
+            font-size: 18px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        .shayari-meta {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #f44;
+            color: #c33;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌙 Shayari Recommender</h1>
+        <p class="subtitle">NLP-Based Emotion-Aware Poetry Recommendation</p>
+        
+        <div class="input-section">
+            <label for="userInput">Enter your mood or preference:</label>
+            <textarea id="userInput" placeholder="Example: I'm feeling romantic today..."></textarea>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="getRecommendations('emotion')">
+                    Recommend by Emotion
+                </button>
+                <button class="btn-secondary" onclick="getRecommendations('similarity')">
+                    Recommend by Similarity
+                </button>
+            </div>
+        </div>
+        
+        <div id="results" class="results"></div>
+    </div>
+    
+    <script>
+        async function getRecommendations(method) {
+            const userInput = document.getElementById('userInput').value.trim();
+            const resultsDiv = document.getElementById('results');
+            
+            if (!userInput) {
+                alert('Please enter some text!');
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading">Analyzing and finding perfect Shayari for you...</div>';
+            
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: userInput,
+                        method: method
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    resultsDiv.innerHTML = '<div class="shayari-card error">Error: ' + data.error + '</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="shayari-card error">Error connecting to server</div>';
+            }
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            let html = '';
+            
+            if (data.detected_emotion) {
+                html += `<div class="emotion-badge">Detected Emotion: ${data.detected_emotion}</div>`;
+            }
+            
+            html += '<h3>Recommended Shayari:</h3>';
+            
+            data.recommendations.forEach((shayari, index) => {
+                html += `
+                    <div class="shayari-card">
+                        <div class="shayari-text">"${shayari.text}"</div>
+                        <div class="shayari-meta">
+                            Theme: ${shayari.theme} | Emotion: ${shayari.emotion}
+                            ${shayari.similarity_score ? ` | Match: ${(shayari.similarity_score * 100).toFixed(1)}%` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+```
+
+**Where**: `templates/index.html`
+
+---
+
+### **File 4: `.gitignore`**
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
